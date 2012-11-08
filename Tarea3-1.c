@@ -4,7 +4,6 @@
 
 double time_diff(struct timeval x , struct timeval y);
 
-/** comentario freak, lista[256] es lo mismo que decir tamanomatriz**/
 int main(){
 	/**Dar comienzo al reloj**/
 	struct timeval before , after;
