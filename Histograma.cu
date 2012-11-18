@@ -26,9 +26,9 @@ int main()
 	array_lenght = matrix_dim * matrix_dim;
 
 	data_h = (int *)malloc(array_lenght * sizeof(int));
-    for (i = 0; i < array_lenght && fscanf(in_f, "%d", &data_h[i]) == 1; ++i);
+	for (i = 0; i < array_lenght && fscanf(in_f, "%d", &data_h[i]) == 1; ++i);
 
-    CUDA_Hist(data_h, hist_h, array_lenght);
+	CUDA_Hist(data_h, hist_h, array_lenght);
 
 	return 0;
 }
@@ -39,18 +39,18 @@ void CUDA_Hist(int *data_h, int *hist_h, int array_lenght)
 	int block_size = NUMBER_OF_THREADS;
 
 	cudaMalloc((void **) &data_d, array_lenght * sizeof(int));
-    cudaMalloc((void **) &hist_d, HIST_LENGHT * sizeof(int));
+	cudaMalloc((void **) &hist_d, HIST_LENGHT * sizeof(int));
 
-    cudaMemcpy(data_d, data_h, array_lenght * sizeof(int), cudaMemcpyHostToDevice);
-    cudaMemset(hist_d, 0, HIST_LENGHT * sizeof(int));
+	cudaMemcpy(data_d, data_h, array_lenght * sizeof(int), cudaMemcpyHostToDevice);
+	cudaMemset(hist_d, 0, HIST_LENGHT * sizeof(int));
 
-    blocks = ceil((float)array_lenght/block_size);
+	blocks = ceil((float)array_lenght/block_size);
 
-    GPUfuncion <<<blocks, block_size>>> (hist_d, data_d, array_lenght);
+	GPUfuncion <<<blocks, block_size>>> (hist_d, data_d, array_lenght);
 
-    cudaMemcpy(hist_h, hist_d, HIST_LENGHT * sizeof(int), cudaMemcpyDeviceToHost);
+	cudaMemcpy(hist_h, hist_d, HIST_LENGHT * sizeof(int), cudaMemcpyDeviceToHost);
 
-    cudaFree(data_d);
-    cudaFree(hist_d);
-    return;
+	cudaFree(data_d);
+	cudaFree(hist_d);
+	return;
 }
