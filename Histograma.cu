@@ -6,7 +6,6 @@
 #define HIST_LENGTH 256
 #define NUMBER_OF_THREADS 512
 
-double time_diff(struct timeval x , struct timeval y);
 void CUDA_Hist(int *data_h, int *hist_h, int array_length);
 
 __global__ void GPUfuncion(int *hist, int *data, int max)
@@ -14,29 +13,30 @@ __global__ void GPUfuncion(int *hist, int *data, int max)
 	int t = threadIdx.x;
 	int b = blockIdx.x;
 	int B = blockDim.x;
-	int value;
+	int buffer;
 
 	__shared__ int hist_temp[HIST_LENGTH];
+	if (t < HIST_LENGTH)
+	{
+		hist_temp[t] = 0;
+	}
+	__syncthreads();
 
 	int index = b * B + t;
 	
-	if (t < HIST_LENGTH)
-		hist_temp[t] = 0;
-
-	__syncthreads();
-
 	if (index < max)
 	{
-		value = data[index];
-		atomicAdd(&(hist_temp[value]), 1);
+		buffer = data[index];
+		atomicAdd(&(hist_temp[buffer]), 1);
+		__syncthreads();
+		if (t < HIST_LENGTH)
+			atomicAdd(&(hist[t]), hist_temp[t]);
 	}
-	
-	__syncthreads();
-	if (t < HIST_LENGTH)
-		atomicAdd(&(hist[t]), hist_temp[t]);
+	else
+		return;
 }
 
-int main()
+int main(int argc, char *argv[])
 {	
 	float elapsedTime;
 	cudaEvent_t start, stop;
@@ -49,7 +49,7 @@ int main()
 	int i;
 
 	/** Ficheros de entrada y salida **/
-	FILE *in_f = fopen("entrada", "r");
+	FILE *in_f = fopen(argv[1], "r");
 	FILE *out_f = fopen("salida", "w");
 	
 	/** Leer el primer numero que determina el tamano de la matriz **/

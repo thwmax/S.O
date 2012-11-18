@@ -4,7 +4,7 @@
 
 double time_diff(struct timeval x , struct timeval y);
 
-int main()
+int main(int argc, char *argv[])
 {
 	/**Guarda hora de inicio**/
 	struct timeval before , after;
@@ -13,7 +13,7 @@ int main()
 	int matrixsize, i, j, histogram[256], *numbers;
 	
 	/** Ficheros de entrada y salida **/
-	FILE *in = fopen("entrada", "r");
+	FILE *in = fopen(argv[1], "r");
 	FILE *out = fopen("salida", "w");
 	
 	/** Leer el primer numero que determina el tamano de la matriz **/
