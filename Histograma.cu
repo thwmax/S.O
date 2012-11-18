@@ -1,4 +1,4 @@
-#include <stdio.h>
+include <stdio.h>
 #include <math.h>
 #include <time.h>
 #include <cuda.h>
@@ -29,15 +29,11 @@ __global__ void GPUfuncion(int *hist, int *data, int max)
 	{
 		value = data[index];
 		atomicAdd(&(hist_temp[value]), 1);
-		__syncthreads();
-
-		if (t < HIST_LENGTH)
-			atomicAdd(&(hist[t]), hist_temp[t]);
-
-		return;
 	}
-	else
-		return;
+	
+	__syncthreads();
+	if (t < HIST_LENGTH)
+		atomicAdd(&(hist[t]), hist_temp[t]);
 }
 
 int main()
