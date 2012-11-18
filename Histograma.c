@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 	
 	/**Parar el reloj**/
 	gettimeofday(&after , NULL);
-	printf("Tiempo de ejecucion: %.0lf [ms]\n" , time_diff(before , after) );
+	printf("Tiempo de ejecucion: %lf [ms]\n" , time_diff(before , after) );
 
 	return 0;
 }
@@ -56,8 +56,8 @@ double time_diff(struct timeval x , struct timeval y)
 {
 		double x_ms , y_ms , diff;
 	   
-		x_ms = (double)x.tv_sec*1000 + (double)x.tv_usec/1000;
-		y_ms = (double)y.tv_sec*1000 + (double)y.tv_usec/1000;
+		x_ms = (double)x.tv_sec*(double)1000 + (double)x.tv_usec/(double)1000;
+		y_ms = (double)y.tv_sec*(double)1000 + (double)y.tv_usec/(double)1000;
 	   
 		diff = (double)y_ms - (double)x_ms;
 	   
