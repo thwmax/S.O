@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <math.h>
 #include <time.h>
 #include <cuda.h>
@@ -7,7 +6,10 @@
 #define HIST_LENGHT 256
 #define NUMBER_OF_THREADS 512
 
-__global__ void GPUfuncion(*hist, *data, max)
+double time_diff(struct timeval x , struct timeval y);
+void CUDA_Hist(int *data_h, int *hist_h, int array_lenght);
+
+__global__ void GPUfuncion(int *hist, int *data, int max)
 {
 	int t = threadIdx.x;
 	int b = blockIdx.x;
@@ -26,11 +28,16 @@ __global__ void GPUfuncion(*hist, *data, max)
 	if (index < max)
 	{
 		value = data[index];
-		atomicAdd(hist_temp[value], 1);
+		atomicadd(hist_temp[value], 1);
+		__syncthreads();
+
+		if (t < HIST_LENGHT)
+			atomicadd(hist[t], hist_temp[t]);
+
+		return;
 	}
-
-	__syncthreads();
-
+	else
+		return;
 }
 
 int main()
@@ -58,9 +65,9 @@ int main()
 	for (i = 0; i < 256; i++)
 	{
 		if (i == 255)
-			fprintf(out, "%d", hist_h[i]);
+			fprintf(out_f, "%d", hist_h[i]);
 		else
-			fprintf(out, "%d\n", hist_h[i]);
+			fprintf(out_f, "%d\n", hist_h[i]);
 	}
 	
 	fclose(in_f);
