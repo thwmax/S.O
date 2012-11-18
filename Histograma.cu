@@ -38,6 +38,13 @@ __global__ void GPUfuncion(int *hist, int *data, int max)
 
 int main()
 {	
+	float elapsedTime;
+	cudaEvent_t start, stop;
+
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	cudaEventRecord(start, 0);
+
 	int matrix_dim, array_length, *data_h, hist_h[HIST_LENGTH];
 	int i;
 
@@ -65,6 +72,14 @@ int main()
 	fclose(in_f);
 	fclose(out_f);
 	
+	cudaEventRecord(stop, 0);
+	cudaEventSynchronize(stop);
+	cudaEventElapsedTime(&elapsedTime, start, stop);
+
+	printf("Tiempo de ejecucion: %f\n", elapsedTime);
+
+	cudaEventDestroy(&start);
+	cudaEventDestroy(&stop);	
 	return 0;
 }
 
