@@ -28,11 +28,11 @@ __global__ void GPUfuncion(int *hist, int *data, int max)
 	if (index < max)
 	{
 		value = data[index];
-		atomicadd(hist_temp[value], 1);
+		atomicAdd(&(hist_temp[value]), 1);
 		__syncthreads();
 
 		if (t < HIST_LENGHT)
-			atomicadd(hist[t], hist_temp[t]);
+			atomicAdd(&(hist[t]), hist_temp[t]);
 
 		return;
 	}
@@ -41,11 +41,7 @@ __global__ void GPUfuncion(int *hist, int *data, int max)
 }
 
 int main()
-{
-	/**Guarda hora de inicio**/
-	struct timeval before , after;
-	gettimeofday(&before , NULL);
-	
+{	
 	int matrix_dim, array_lenght, *data_h, hist_h[HIST_LENGHT];
 	int i;
 
@@ -73,10 +69,6 @@ int main()
 	fclose(in_f);
 	fclose(out_f);
 	
-	/**Parar el reloj**/
-	gettimeofday(&after , NULL);
-	printf("Tiempo de ejecucion: %.0lf [ms]\n" , time_diff(before , after) );
-
 	return 0;
 }
 
@@ -100,16 +92,4 @@ void CUDA_Hist(int *data_h, int *hist_h, int array_lenght)
 	cudaFree(data_d);
 	cudaFree(hist_d);
 	return;
-}
-
-double time_diff(struct timeval x , struct timeval y)
-{
-	double x_ms , y_ms , diff;
-
-	x_ms = (double)x.tv_sec*1000000 + (double)x.tv_usec;
-	y_ms = (double)y.tv_sec*1000000 + (double)y.tv_usec;
-
-	diff = (double)y_ms - (double)x_ms;
-
-	return diff;
 }
