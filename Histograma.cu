@@ -7,6 +7,31 @@
 #define HIST_LENGHT 256
 #define NUMBER_OF_THREADS 512
 
+__global__ void GPUfuncion(*hist, *data, max)
+{
+	int t = threadIdx.x;
+	int b = blockIdx.x;
+	int B = blockDim.x;
+	int value;
+
+	__shared__ int hist_temp[HIST_LENGHT];
+
+	int index = b * B + t;
+	
+	if (t < HIST_LENGHT)
+		hist_temp[t] = 0;
+
+	__syncthreads();
+
+	if (index < max)
+	{
+		value = data[index];
+		atomicAdd(hist_temp[value], 1);
+	}
+
+	__syncthreads();
+
+}
 
 int main()
 {
@@ -29,6 +54,21 @@ int main()
 	for (i = 0; i < array_lenght && fscanf(in_f, "%d", &data_h[i]) == 1; ++i);
 
 	CUDA_Hist(data_h, hist_h, array_lenght);
+
+	for (i = 0; i < 256; i++)
+	{
+		if (i == 255)
+			fprintf(out, "%d", hist_h[i]);
+		else
+			fprintf(out, "%d\n", hist_h[i]);
+	}
+	
+	fclose(in_f);
+	fclose(out_f);
+	
+	/**Parar el reloj**/
+	gettimeofday(&after , NULL);
+	printf("Tiempo de ejecucion: %.0lf [ms]\n" , time_diff(before , after) );
 
 	return 0;
 }
@@ -53,4 +93,16 @@ void CUDA_Hist(int *data_h, int *hist_h, int array_lenght)
 	cudaFree(data_d);
 	cudaFree(hist_d);
 	return;
+}
+
+double time_diff(struct timeval x , struct timeval y)
+{
+	double x_ms , y_ms , diff;
+
+	x_ms = (double)x.tv_sec*1000000 + (double)x.tv_usec;
+	y_ms = (double)y.tv_sec*1000000 + (double)y.tv_usec;
+
+	diff = (double)y_ms - (double)x_ms;
+
+	return diff;
 }
