@@ -1,91 +1,65 @@
-include <stdio.h>
-#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
-#include <cuda.h>
-
-#define HIST_LENGTH 256
-#define NUMBER_OF_THREADS 512
 
 double time_diff(struct timeval x , struct timeval y);
-void CUDA_Hist(int *data_h, int *hist_h, int array_length);
-
-__global__ void GPUfuncion(int *hist, int *data, int max)
-{
-	int t = threadIdx.x;
-	int b = blockIdx.x;
-	int B = blockDim.x;
-	int value;
-
-	__shared__ int hist_temp[HIST_LENGTH];
-
-	int index = b * B + t;
-	
-	if (t < HIST_LENGTH)
-		hist_temp[t] = 0;
-
-	__syncthreads();
-
-	if (index < max)
-	{
-		value = data[index];
-		atomicAdd(&(hist_temp[value]), 1);
-	}
-	
-	__syncthreads();
-	if (t < HIST_LENGTH)
-		atomicAdd(&(hist[t]), hist_temp[t]);
-}
 
 int main()
-{	
-	int matrix_dim, array_length, *data_h, hist_h[HIST_LENGTH];
-	int i;
-
+{
+	/**Guarda hora de inicio**/
+	struct timeval before , after;
+	gettimeofday(&before , NULL);
+	
+	int matrixsize, i, j, histogram[256], *numbers;
+	
 	/** Ficheros de entrada y salida **/
-	FILE *in_f = fopen("entrada", "r");
-	FILE *out_f = fopen("salida", "w");
+	FILE *in = fopen("entrada", "r");
+	FILE *out = fopen("salida", "w");
 	
 	/** Leer el primer numero que determina el tamano de la matriz **/
-	fscanf(in_f, "%d", &matrix_dim);
-	array_length = matrix_dim * matrix_dim;
+	fscanf(in, "%d", &matrixsize);
+	
+	/**Llena el arreglo contador con ceros**/
+	for (i = 0; i < 256; i++)
+		histogram[i] = 0;
+	
+	/**Asigna dinamicamente el tamano necesario para almacenar los enteros**/
+	numbers = (int *)malloc(matrixsize * matrixsize * sizeof(int));
+	
+	/**Asigna todos los enteros a un arreglo**/
+	for (i = 0; i < matrixsize * matrixsize && fscanf(in, "%d", &numbers[i]) == 1; ++i);
 
-	data_h = (int *)malloc(array_length * sizeof(int));
-	for (i = 0; i < array_length && fscanf(in_f, "%d", &data_h[i]) == 1; ++i);
-
-	CUDA_Hist(data_h, hist_h, array_length);
-
+	/**Recorre el arreglo y compara cada numero con la histogram para sumar 1 al contador del numero calzado**/
+	for (i = 0; i < matrixsize * matrixsize; i++)
+		histogram[numbers[i]]++;
+	
+	/**Escribe en el archivo out la cantidad de cada numero encontrado**/
 	for (i = 0; i < 256; i++)
 	{
 		if (i == 255)
-			fprintf(out_f, "%d", hist_h[i]);
+			fprintf(out, "%d", histogram[i]);
 		else
-			fprintf(out_f, "%d\n", hist_h[i]);
+			fprintf(out, "%d\n", histogram[i]);
 	}
 	
-	fclose(in_f);
-	fclose(out_f);
+	fclose(in);
+	fclose(out);
 	
+	/**Parar el reloj**/
+	gettimeofday(&after , NULL);
+	printf("Tiempo de ejecucion: %.0lf [ms]\n" , time_diff(before , after) );
+
 	return 0;
 }
 
-void CUDA_Hist(int *data_h, int *hist_h, int array_length)
+double time_diff(struct timeval x , struct timeval y)
 {
-	int *data_d, *hist_d, blocks;
-	int block_size = NUMBER_OF_THREADS;
-
-	cudaMalloc((void **) &data_d, array_length * sizeof(int));
-	cudaMalloc((void **) &hist_d, HIST_LENGTH * sizeof(int));
-
-	cudaMemcpy(data_d, data_h, array_length * sizeof(int), cudaMemcpyHostToDevice);
-	cudaMemset(hist_d, 0, HIST_LENGTH * sizeof(int));
-
-	blocks = ceil((float)array_length/block_size);
-
-	GPUfuncion <<<blocks, block_size>>> (hist_d, data_d, array_length);
-
-	cudaMemcpy(hist_h, hist_d, HIST_LENGTH * sizeof(int), cudaMemcpyDeviceToHost);
-
-	cudaFree(data_d);
-	cudaFree(hist_d);
-	return;
+		double x_ms , y_ms , diff;
+	   
+		x_ms = (double)x.tv_sec*1000000 + (double)x.tv_usec;
+		y_ms = (double)y.tv_sec*1000000 + (double)y.tv_usec;
+	   
+		diff = (double)y_ms - (double)x_ms;
+	   
+		return diff;
 }
