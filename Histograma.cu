@@ -6,55 +6,35 @@
 #define HIST_LENGTH 256
 #define NUMBER_OF_THREADS 512
 
-/** Maneja la memoria del dispositivo y el huesped, ademas
- ** de la transferencia de datos entre estos dos **/
 void CUDA_Hist(int *data_h, int *hist_h, int array_length);
 
-/** Kernel CUDA, realiza la suma resultante en un histograma **/
 __global__ void GPUfuncion(int *hist, int *data, int max)
 {
+	int i = blockDim.x * blockIdx.x + threadIdx.x;
 	int t = threadIdx.x;
-	int b = blockIdx.x;
-	int B = blockDim.x;
-	int buffer;
 
-	/** Acceso a memoria compartida es 100x mas rapida que
-	 ** memoria global, por lo tanto se crea un arreglo local al
-	 ** bloque **/
-	__shared__ int hist_temp[HIST_LENGTH];
-	if (t < HIST_LENGTH)
-	{
-		hist_temp[t] = 0;
-	}
-	/** Barrera para asegurar integridad del arreglo compartido **/
+	__shared__ int local_hist[256];
+
+	if (t < 256)
+		local_hist[t] = 0;
+
 	__syncthreads();
 
-	int index = b * B + t;
-	
-	if (index < max)
-	{
-		/** Rescata el valor de la memoria global para cada hebra
-		 ** de ejecucion **/
-		buffer = data[index];
-		atomicAdd(&(hist_temp[buffer]), 1);
-		__syncthreads();
-		/** Traspasa el resultado a la memoria global **/
-		if (t < HIST_LENGTH)
-			atomicAdd(&(hist[t]), hist_temp[t]);
+	if (i < max) {
+		int aux = data[i];
+		atomicAdd(&local_hist[aux], 1);
 	}
-	else
-		return;
+
+	__syncthreads();
+
+	if (t < 256)
+		atomicAdd(&hist[t], local_hist[t]);
 }
 
 int main(int argc, char *argv[])
 {	
 	float elapsedTime;
 	cudaEvent_t start, stop;
-
-	/** Comienza a registrar el tiempo de ejecucion **/
-	cudaEventCreate(&start);
-	cudaEventCreate(&stop);
-	cudaEventRecord(start, 0);
 
 	int matrix_dim, array_length, *data_h, hist_h[HIST_LENGTH];
 	int i;
@@ -67,13 +47,21 @@ int main(int argc, char *argv[])
 	fscanf(in_f, "%d", &matrix_dim);
 	array_length = matrix_dim * matrix_dim;
 
-	/** Se declara arreglo dinamico que contiene a la matriz serializada **/
 	data_h = (int *)malloc(array_length * sizeof(int));
 	for (i = 0; i < array_length && fscanf(in_f, "%d", &data_h[i]) == 1; ++i);
 
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	cudaEventRecord(start, 0);
+
 	CUDA_Hist(data_h, hist_h, array_length);
 
-	/** Imprime en la salida estandar el histograma resultante **/
+	cudaEventRecord(stop, 0);
+	cudaEventSynchronize(stop);
+	cudaEventElapsedTime(&elapsedTime, start, stop);
+	cudaEventDestroy(start);
+	cudaEventDestroy(stop);	
+
 	for (i = 0; i < 256; i++)
 	{
 		if (i == 255)
@@ -85,15 +73,8 @@ int main(int argc, char *argv[])
 	fclose(in_f);
 	fclose(out_f);
 	
-	/** Mediante CUDA API events se calcula el tiempo de ejecucion **/
-	cudaEventRecord(stop, 0);
-	cudaEventSynchronize(stop);
-	cudaEventElapsedTime(&elapsedTime, start, stop);
-
 	printf("Tiempo de ejecucion: %f [ms]\n", elapsedTime);
 
-	cudaEventDestroy(start);
-	cudaEventDestroy(stop);	
 	return 0;
 }
 
@@ -107,12 +88,12 @@ void CUDA_Hist(int *data_h, int *hist_h, int array_length)
 
 	cudaMemcpy(data_d, data_h, array_length * sizeof(int), cudaMemcpyHostToDevice);
 	cudaMemset(hist_d, 0, HIST_LENGTH * sizeof(int));
+	
+	cudaMemcpy(hist_d, hist_h, HIST_LENGTH * sizeof(int), cudaMemcpyHostToDevice);
 
-	blocks = ceil((float)array_length/block_size);
+	blocks = (int)ceil(array_length/512.0);
 
-	GPUfuncion <<<blocks, block_size>>> (hist_d, data_d, array_length);
-
-	cudaMemcpy(hist_h, hist_d, HIST_LENGTH * sizeof(int), cudaMemcpyDeviceToHost);
+	GPUfuncion <<<blocks, block_size, 256 * sizeof(int)>>> (hist_d, data_d, array_length);
 
 	cudaFree(data_d);
 	cudaFree(hist_d);

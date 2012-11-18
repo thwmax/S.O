@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 {
 	/**Guarda hora de inicio**/
 	struct timeval before , after;
-	gettimeofday(&before , NULL);
+	
 	
 	int matrixsize, i, j, histogram[256], *numbers;
 	
@@ -29,9 +29,11 @@ int main(int argc, char *argv[])
 	/**Asigna todos los enteros a un arreglo**/
 	for (i = 0; i < matrixsize * matrixsize && fscanf(in, "%d", &numbers[i]) == 1; ++i);
 
+	gettimeofday(&before , NULL);
 	/**Recorre el arreglo y compara cada numero con la histogram para sumar 1 al contador del numero calzado**/
 	for (i = 0; i < matrixsize * matrixsize; i++)
 		histogram[numbers[i]]++;
+	gettimeofday(&after , NULL);
 	
 	/**Escribe en el archivo out la cantidad de cada numero encontrado**/
 	for (i = 0; i < 256; i++)
@@ -46,7 +48,7 @@ int main(int argc, char *argv[])
 	fclose(out);
 	
 	/**Parar el reloj**/
-	gettimeofday(&after , NULL);
+	
 	printf("Tiempo de ejecucion: %lf [ms]\n" , time_diff(before , after) );
 
 	return 0;
