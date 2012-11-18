@@ -56,8 +56,8 @@ double time_diff(struct timeval x , struct timeval y)
 {
 		double x_ms , y_ms , diff;
 	   
-		x_ms = (double)x.tv_sec*1000000 + (double)x.tv_usec;
-		y_ms = (double)y.tv_sec*1000000 + (double)y.tv_usec;
+		x_ms = (double)x.tv_sec*1000 + (double)x.tv_usec/1000;
+		y_ms = (double)y.tv_sec*1000 + (double)y.tv_usec/1000;
 	   
 		diff = (double)y_ms - (double)x_ms;
 	   

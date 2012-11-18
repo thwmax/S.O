@@ -76,10 +76,10 @@ int main()
 	cudaEventSynchronize(stop);
 	cudaEventElapsedTime(&elapsedTime, start, stop);
 
-	printf("Tiempo de ejecucion: %f\n", elapsedTime);
+	printf("Tiempo de ejecucion: %f [ms]\n", elapsedTime);
 
-	cudaEventDestroy(&start);
-	cudaEventDestroy(&stop);	
+	cudaEventDestroy(start);
+	cudaEventDestroy(stop);	
 	return 0;
 }
 
