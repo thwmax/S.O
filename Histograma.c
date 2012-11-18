@@ -1,4 +1,4 @@
-﻿#include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -11,13 +11,15 @@ int main()
 	gettimeofday(&before , NULL);
 	
 	int matrixsize, i, j, histogram[256], *numbers;
+	
+	/** Ficheros de entrada y salida **/
 	FILE *in = fopen("entrada", "r");
 	FILE *out = fopen("salida", "w");
 	
-	/** Leer el primer numbers que determina el tamano de la matriz **/
+	/** Leer el primer numero que determina el tamano de la matriz **/
 	fscanf(in, "%d", &matrixsize);
 	
-	/**Llena el arreglo cntador con ceros**/
+	/**Llena el arreglo contador con ceros**/
 	for (i = 0; i < 256; i++)
 		histogram[i] = 0;
 	
