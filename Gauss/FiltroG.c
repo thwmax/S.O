@@ -3,19 +3,19 @@
 #include <math.h>
 //#include <cuda.h>
 
-#define PI 3.141516
+#define PI 3.14
 
-void gauss (int sigma, int gauss_matrix[][5]);
+void gauss (double sigma, double gauss_matrix[][5]);
 
 int main(int argc, char *argv[])
 {
 	int width, height;
 	int i, j;
 	int **image_matrix;
-	int gauss_matrix[5][5];
+	double gauss_matrix[5][5];
 	int *temp;
 	char *finalPtr;
-	int sigma = (int)strtod(argv[2], &finalPtr);
+	double sigma = strtod(argv[2], &finalPtr);
 
 	FILE *in_f = fopen(argv[1], "r");
 	FILE *out_f = fopen("salida", "w");
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
 	gauss(sigma, gauss_matrix);
 
-	//printf("%d\n", gauss_matrix[2][2]);
+	printf("%f\n", gauss_matrix[2][2]);
 
 	fclose(in_f);
 	fclose(out_f);
@@ -46,27 +46,27 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-void gauss(int sigma, int gauss_matrix[][5])
+void gauss(double sigma, double gauss_matrix[][5])
 {
-	int x, y, u, v, varianza;
-	int sum = 0;
+	double x, y, u, v, varianza;
+	double sum = 0;
 
 	for(x = 0; x < 5; x++)
 	{
 		for(y = 0; y < 5; y++)
 		{
-			u = pow((x+2),2);
-			v = pow((y-2),2);
-			varianza = pow(sigma,2);
+			u = pow((x+2),2.0);
+			v = pow((y-2),2.0);
+			varianza = pow(sigma,2.0);
 
-			gauss_matrix[x][y] = exp((-u-v)/(2*sigma))/(2*PI*varianza);
-			sum += gauss_matrix[x][y];
+			gauss_matrix[(int)x][(int)y] = exp((-u-v)/(2*sigma))/(2*PI*varianza);
+			sum += gauss_matrix[(int)x][(int)y];
 		}
 	}
 
 	for(x = 0; x < 5; x++)
 		for(y = 0; y < 5; y++)
-			gauss_matrix[x][y] /= sum;
+			gauss_matrix[(int)x][(int)y] *= (int)sum;
 			
 	return;
 }
