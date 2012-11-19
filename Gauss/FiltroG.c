@@ -3,7 +3,7 @@
 #include <math.h>
 //#include <cuda.h>
 
-#define PI 3.14
+#define PI 3.1415
 
 void gauss (double sigma, double gauss_matrix[][5]);
 
@@ -65,7 +65,7 @@ void gauss(double sigma, double gauss_matrix[][5])
 			v = pow(y,2);
 			varianza = pow(sigma,2);
 
-			gauss_matrix[i][j] = floorf(exp((-u-v)/(2*varianza))/(2*PI*varianza)*100)/100;
+			gauss_matrix[i][j] = exp((-u-v)/(2*varianza))/(2*PI*varianza);
 			sum += gauss_matrix[i][j];
 			x++;
 		}
