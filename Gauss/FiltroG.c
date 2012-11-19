@@ -48,25 +48,31 @@ int main(int argc, char *argv[])
 
 void gauss(double sigma, double gauss_matrix[][5])
 {
-	double x, y, u, v, varianza;
+	int i, j;
+	double x = -2.0, y = 2.0;
+	double u, v, varianza;
 	double sum = 0;
 
-	for(x = 0; x < 5; x++)
+	for(i = 0; i < 5; i++)
 	{
-		for(y = 0; y < 5; y++)
+		for(j = 0; j < 5; j++)
 		{
-			u = pow((x+2),2.0);
-			v = pow((y-2),2.0);
-			varianza = pow(sigma,2.0);
+			u = pow(x,2);
+			v = pow(y,2);
+			varianza = pow(sigma,2);
 
-			gauss_matrix[(int)x][(int)y] = exp((-u-v)/(2*sigma))/(2*PI*varianza);
-			sum += gauss_matrix[(int)x][(int)y];
+			gauss_matrix[i][j] = exp((-u-v)/(2*varianza))/(2*PI*varianza);
+			printf("(x,y) = (%f, %f) coef = %f \n", x,y, gauss_matrix[i][j]);
+			sum += gauss_matrix[i][j];
+			x++;
 		}
+		y--;
+		x = -2.0;
 	}
 
-	for(x = 0; x < 5; x++)
-		for(y = 0; y < 5; y++)
-			gauss_matrix[(int)x][(int)y] *= (int)sum;
+	for(i = 0; i < 5; i++)
+		for(j = 0; j < 5; j++)
+			gauss_matrix[i][j] *= sum;
 			
 	return;
 }
