@@ -13,8 +13,9 @@ int main(int argc, char *argv[])
 	int i, j;
 	int **image_matrix;
 	int gauss_matrix[5][5];
-	
-	int sigma = strtod(argv[2], NULL);
+	int *temp;
+	char *finalPtr;
+	int sigma = (int)strtod(argv[2], &finalPtr);
 
 	FILE *in_f = fopen(argv[1], "r");
 	FILE *out_f = fopen("salida", "w");
@@ -23,20 +24,24 @@ int main(int argc, char *argv[])
 	fscanf(in_f, "%d", &width);
 	fscanf(in_f, "%d", &height);
 
-	image_matrix = (int **)malloc(width * sizeof(int));
-	*image_matrix = (int *)malloc(height * sizeof(int));
+	image_matrix = (int **)malloc(width * sizeof(int*));
+	temp = (int *)malloc(width * height * sizeof(int));
 
 	for (i = 0; i < width; i++)
-	{
-		for (j = 0; j < height; j++)
-		{
+		image_matrix[i] = temp + (i * height);
+
+	for (i = 0; i < width; i++){
+		for (j = 0; j < height; ++j){
 			fscanf(in_f, "%d", &image_matrix[i][j]);
 		}
 	}
 
-	gauss((int)sigma, gauss_matrix);
+	gauss(sigma, gauss_matrix);
 
-	printf("%d\n", gauss_matrix[2][2]);
+	//printf("%d\n", gauss_matrix[2][2]);
+
+	fclose(in_f);
+	fclose(out_f);
 
 	return 0;
 }
