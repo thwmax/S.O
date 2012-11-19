@@ -59,7 +59,7 @@ void gauss(double sigma, double gauss_matrix[][5])
 			v = pow((y-2),2.0);
 			varianza = pow(sigma,2.0);
 
-			gauss_matrix[(int)x][(int)y] = exp((-u-v)/(2*sigma))/(2*PI*varianza);
+			gauss_matrix[(int)x][(int)y] = exp((-u-v)/(2*varianza))/(2*PI*varianza);
 			sum += gauss_matrix[(int)x][(int)y];
 		}
 	}
