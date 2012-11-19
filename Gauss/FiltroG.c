@@ -38,7 +38,11 @@ int main(int argc, char *argv[])
 
 	gauss(sigma, gauss_matrix);
 
-	printf("%f\n", gauss_matrix[2][2]);
+	for (i=0; i<5; i++){
+		for(j = 0; j<5;j++)
+			printf("%2.0f ", gauss_matrix[i][j]);
+		printf("\n");
+	}
 
 	fclose(in_f);
 	fclose(out_f);
@@ -61,8 +65,7 @@ void gauss(double sigma, double gauss_matrix[][5])
 			v = pow(y,2);
 			varianza = pow(sigma,2);
 
-			gauss_matrix[i][j] = exp((-u-v)/(2*varianza))/(2*PI*varianza);
-			printf("(x,y) = (%f, %f) coef = %f \n", x,y, gauss_matrix[i][j]);
+			gauss_matrix[i][j] = floorf(exp((-u-v)/(2*varianza))/(2*PI*varianza)*100)/100;
 			sum += gauss_matrix[i][j];
 			x++;
 		}
@@ -72,7 +75,7 @@ void gauss(double sigma, double gauss_matrix[][5])
 
 	for(i = 0; i < 5; i++)
 		for(j = 0; j < 5; j++)
-			gauss_matrix[i][j] *= sum;
+			gauss_matrix[i][j] = ceil(gauss_matrix[i][j]*273);
 			
 	return;
 }
