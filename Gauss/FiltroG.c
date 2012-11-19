@@ -55,7 +55,6 @@ void gauss(double sigma, double gauss_matrix[][5])
 	int i, j;
 	double x = -2.0, y = 2.0;
 	double u, v, varianza;
-	double sum = 0;
 
 	for(i = 0; i < 5; i++)
 	{
@@ -66,7 +65,6 @@ void gauss(double sigma, double gauss_matrix[][5])
 			varianza = pow(sigma,2);
 
 			gauss_matrix[i][j] = exp((-u-v)/(2*varianza))/(2*PI*varianza);
-			sum += gauss_matrix[i][j];
 			x++;
 		}
 		y--;
