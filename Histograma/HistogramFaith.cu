@@ -4,19 +4,39 @@
 #define HIST_LENGTH 256
 #define THREADS_P_BLOCK 512
 
+__global__ void histogram_kernel(int *data_d, int data_length, int *hist_d)
+{
+	int index, offset;
+	__shared__ int temp_hist[256];
+
+	temp_hist[threadIdx.x] = 0;
+	__syncthreads();
+
+	index = threadIdx.x + blockIdx.x * blockDim.x;
+	offset = blockDim.x * gridDim.x;
+
+	while(index < data_length) {
+		atomicAdd( &temp_hist[data_d[index]], 1);
+		index += offset;
+	}
+
+	__syncthreads();
+	atomicAdd(&(hist_d[threadIdx.x]), temp_hist[threadIdx.x]);
+}
+
 int main(int argc, char *argv[])
 {
 	float elapsed_Time;
-	int i, data_length, *data_h;
-	unsigned int hist_h[HIST_LENGTH];
-	int *data_d, *hist_d, blocks;
+	int i, blocks;
+	int data_length;
+	int hist_h[HIST_LENGTH], *data_h, *data_d, *hist_d;
 	cudaEvent_t start, stop;
 
 	/** Timers **/
 	cudaEventCreate(&start);
 	cudaEventCreate(&stop);
-	cudaEventRecord(start, 0);
-
+	
+	
 	/** Input de datos **/
 	FILE *in_f = fopen(argv[1], "r");
 	fscanf(in_f, "%d", &data_length);
@@ -27,6 +47,7 @@ int main(int argc, char *argv[])
 	for (i = 0; i < data_length && fscanf(in_f, "%d", &data_h[i]) == 1; ++i);
 	fclose(in_f);
 
+	
 	/** Alloc para la memoria en GPU **/
 	cudaMalloc((void **) &data_d, data_length * sizeof(int));
 	cudaMemcpy(data_d, data_h, data_length * sizeof(int), cudaMemcpyHostToDevice);
@@ -37,19 +58,22 @@ int main(int argc, char *argv[])
 	cudaDeviceProp prop;
 	cudaGetDeviceProperties(&prop, 0);
 	blocks = prop.multiProcessorCount;
-	//histogram_kernel<<blocks*2, 256>>(data_d, data_length, hist_d);
-
-	//cudaMemcpy(hist_h, hist_d, 256 * sizeof(int), cudaMemcpyDeviceToHost);
+	blocks *= 2;
+	
+	cudaEventRecord(start, 0);
+	histogram_kernel<<<blocks, 256>>>(data_d, data_length, hist_d);
+	cudaMemcpy(hist_h, hist_d, 256 * sizeof(int), cudaMemcpyDeviceToHost);
+	cudaEventRecord(stop, 0);
+	cudaEventSynchronize(stop);
+	cudaEventElapsedTime(&elapsed_Time, start, stop);
 
 	cudaFree(data_d);
 	cudaFree(hist_d);
 
-	cudaEventRecord(stop, 0);
-	cudaEventSynchronize(stop);
-	cudaEventElapsedTime(&elapsed_Time, start, stop);
+	
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
 
-	printf("Tiempo de ejecucion: %3.3f ms\n", elapsed_Time);
+	printf("Tiempo de ejecucion: %f ms\n", elapsed_Time);
 	return 0;
 }

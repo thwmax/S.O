@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
 	unsigned int histogram[256] = {0};
 	
 	/** Se da la partida al reloj **/
-	gettimeofday(&before , NULL);
+	
 
 	/** Ficheros de entrada y salida **/
 	FILE *in = fopen(argv[1], "r");
@@ -29,10 +29,12 @@ int main(int argc, char *argv[])
 	for (i = 0; i < matrixsize * matrixsize && fscanf(in, "%d", &numbers[i]) == 1; ++i);
 	fclose(in);
 
+	gettimeofday(&before , NULL);
 	/** Recorre el arreglo y compara cada numero con la histogram para sumar 1 al contador del numero calzado **/
 	for (i = 0; i < matrixsize * matrixsize; i++)
 		histogram[numbers[i]]++;
-		
+	gettimeofday(&after , NULL);
+
 	/** Escribe en el archivo out la cantidad de cada numero encontrado **/
 	for (i = 0; i < 256; i++)
 	{
@@ -43,9 +45,8 @@ int main(int argc, char *argv[])
 	}
 	
 	/** Parar el reloj **/
-	gettimeofday(&after , NULL);
-	printf("Tiempo de ejecucion: %f [ms]\n" , time_diff(before , after) );
 	
+	printf("Tiempo de ejecucion: %f [ms]\n" , time_diff(before , after) );
 	fclose(out);
 	return 0;
 }
