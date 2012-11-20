@@ -9,8 +9,12 @@ int main(int argc, char *argv[])
 	/** Declaracon de variables para medir el tiempo **/
 	struct timeval before , after;
 	
-	int matrixsize, i, j, histogram[256], *numbers;
+	int matrixsize, i, j, *numbers;
+	unsigned int histogram[256] = {0};
 	
+	/** Se da la partida al reloj **/
+	gettimeofday(&before , NULL);
+
 	/** Ficheros de entrada y salida **/
 	FILE *in = fopen(argv[1], "r");
 	FILE *out = fopen("salida", "w");
@@ -18,25 +22,17 @@ int main(int argc, char *argv[])
 	/** Leer el primer numero que determina el tamano de la matriz **/
 	fscanf(in, "%d", &matrixsize);
 	
-	/** Llena el arreglo contador con ceros **/
-	histogram[] = {0};
-	
 	/** Asigna dinamicamente el tamano necesario para almacenar los enteros **/
 	numbers = (int *)malloc(matrixsize * matrixsize * sizeof(int));
 	
 	/** Asigna todos los enteros a un arreglo **/
 	for (i = 0; i < matrixsize * matrixsize && fscanf(in, "%d", &numbers[i]) == 1; ++i);
-	
-	/** Se da la partida al reloj **/
-	gettimeofday(&before , NULL);
-	
+	fclose(in);
+
 	/** Recorre el arreglo y compara cada numero con la histogram para sumar 1 al contador del numero calzado **/
 	for (i = 0; i < matrixsize * matrixsize; i++)
 		histogram[numbers[i]]++;
-	
-	/** Parar el reloj **/
-	gettimeofday(&after , NULL);
-	
+		
 	/** Escribe en el archivo out la cantidad de cada numero encontrado **/
 	for (i = 0; i < 256; i++)
 	{
@@ -46,9 +42,10 @@ int main(int argc, char *argv[])
 			fprintf(out, "%d\n", histogram[i]);
 	}
 	
+	/** Parar el reloj **/
+	gettimeofday(&after , NULL);
 	printf("Tiempo de ejecucion: %f [ms]\n" , time_diff(before , after) );
 	
-	fclose(in);
 	fclose(out);
 	return 0;
 }

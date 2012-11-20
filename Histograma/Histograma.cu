@@ -12,23 +12,25 @@ void CUDA_Hist(int *data_h, int *hist_h, int array_length);
 __global__ void GPUfuncion(int *hist, int *data, int max)
 {
 	__shared__ int shared_Hist[256];
+	int value;
 	/** Declaracon de variables identificadoras de hebras **/
 	int i = blockDim.x * blockIdx.x + threadIdx.x;
 	int t = threadIdx.x;
 	
-	if ( i < array_length)
-		int value = data[i];
+	if ( i < max)
+		value = data[i];
 	else
 		return;
 
 	if (t < 256)
 		shared_Hist[t] = 0;
-	__syncthread();
+	__syncthreads();
 
-	atomicAdd(shared_Hist[value], 1);
-	__syncthread();
+	atomicAdd(&shared_Hist[value], 1);
+	__syncthreads();
 
-	hist[t] += shared_Hist[t];
+	if (t < 256)
+		hist[t] += shared_Hist[t];
 	return;
 }
 
@@ -44,7 +46,7 @@ int main(int argc, char *argv[])
 	FILE *out_f = fopen("salida", "w");
 	
 	/** Leer el primer numero que determina el tamano de la matriz **/
-	fscanf(in_f, "%d", &array_length)
+	fscanf(in_f, "%d", &array_length);
 	array_length *= array_length;
 	
 	/** Declaracion dinamica del tamano del arreglo dependiendo de la matriz **/
