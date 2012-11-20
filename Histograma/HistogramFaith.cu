@@ -75,6 +75,7 @@ int main(int argc, char *argv[])
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
 
+	FILE *out = fopen("salida", "w");
 	for (i = 0; i < 256; i++)
 	{
 		if (i == 255)
@@ -82,6 +83,7 @@ int main(int argc, char *argv[])
 		else
 			fprintf(out, "%d\n", hist_h[i]);
 	}
+	fclose(out);
 	
 	printf("Tiempo de ejecucion: %f ms\n", elapsed_Time);
 	return 0;
