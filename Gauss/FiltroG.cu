@@ -81,17 +81,26 @@ void gpuComputing(double gauss_matrix[][5], int* image_matrix, int* final_matrix
 {
 	int *d_image, *d_final;
 	double *d_gauss;
-	
+	int blocks, threads;
+	int dimension = height * width;
+
 	size_t pitch;
 
 	cudaMallocPitch((void** )&d_gauss, &pitch, 5 * sizeof(double), 5);
-	cudaMalloc((void** )&d_image, width * height * sizeof(int));
-	cudaMalloc((void** )&d_final, width * height * sizeof(int));
+	cudaMalloc((void** )&d_image, dimension * sizeof(int));
+	cudaMalloc((void** )&d_final, dimension * sizeof(int));
 
 	cudaMemcpy2D(d_gauss, pitch, gauss_matrix, 5*sizeof(double), 5*sizeof(double), 5, cudaMemcpyHostToDevice);
-	cudaMemcpy(d_image, image_matrix, width * height * sizeof(int), cudaMemcpyHostToDevice); 
+	cudaMemcpy(d_image, image_matrix, dimension * sizeof(int), cudaMemcpyHostToDevice); 
+	
+	blocks = ceil(dimension / 512);
+	
+	if (dimension <= 512)
+		threads = dimension;
+	else
+		threads = 512;
 
-	kernel<<<1, 512>>>(d_image, d_final, d_gauss, pitch, height, width);
+	kernel<<<blocks, threads>>>(d_image, d_final, d_gauss, pitch, height, width);
 
 	cudaMemcpy(final_matrix, d_final, width*height*sizeof(int), cudaMemcpyDeviceToHost);
 

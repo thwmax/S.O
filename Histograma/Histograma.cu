@@ -14,31 +14,13 @@ __global__ void GPUfuncion(int *hist, int *data, int max)
 	/** Declaracon de variables identificadoras de hebras **/
 	int i = blockDim.x * blockIdx.x + threadIdx.x;
 	int t = threadIdx.x;
-	
-	/** Declaracion de memoria compartida **/
-	__shared__ int local_hist[HIST_LENGTH];
-	
-	/** Inicializa el arreglo con puros 0**/
-	if (t < HIST_LENGTH)
-		local_hist[t] = 0;
-	
-	
-	/** Barrera para esperar a que todas las hebras hayan declarado el arreglo entero **/
-	__syncthreads();
-	
+
 	/** Si la hebra esta en el rango del histograma, se declara un auxiliar
 	    con la posicion y se suma 1 en el arreglo del histograma **/
 	if (i < max) {
 		int aux = data[i];
-		atomicAdd(&local_hist[aux], 1);
+		atomicAdd(&hist[aux], 1);
 	}
-	
-	/** Barrera para que todas las hebras hayan recorrido entero el arreglo del histograma **/
-	__syncthreads();
-	
-	/** Similar al anterior if pero ahora se le suma 1 a la suma ya calculada **/
-	if (t < HIST_LENGTH)
-		atomicAdd(&hist[t], local_hist[t]);
 }
 
 int main(int argc, char *argv[])
