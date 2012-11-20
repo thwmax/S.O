@@ -61,8 +61,10 @@ int main(int argc, char *argv[])
 	blocks *= 2;
 	
 	cudaEventRecord(start, 0);
+	
 	histogram_kernel<<<blocks, 256>>>(data_d, data_length, hist_d);
 	cudaMemcpy(hist_h, hist_d, 256 * sizeof(int), cudaMemcpyDeviceToHost);
+	
 	cudaEventRecord(stop, 0);
 	cudaEventSynchronize(stop);
 	cudaEventElapsedTime(&elapsed_Time, start, stop);
@@ -70,10 +72,17 @@ int main(int argc, char *argv[])
 	cudaFree(data_d);
 	cudaFree(hist_d);
 
-	
 	cudaEventDestroy(start);
 	cudaEventDestroy(stop);
 
+	for (i = 0; i < 256; i++)
+	{
+		if (i == 255)
+			fprintf(out, "%d", hist_h[i]);
+		else
+			fprintf(out, "%d\n", hist_h[i]);
+	}
+	
 	printf("Tiempo de ejecucion: %f ms\n", elapsed_Time);
 	return 0;
 }
