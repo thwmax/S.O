@@ -21,6 +21,7 @@ __global__ void kernel(int* image, int* final, double* gauss, int pitch, int pit
 			row[j] = i;
 		}
 	}
+	return;
 }
 
 int main(int argc, char *argv[])
@@ -59,6 +60,8 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	fclose(in_f);
+
 	gauss(sigma, gauss_matrix);
 	gpuComputing(gauss_matrix, image_matrix, final_matrix, height, width);
 
@@ -67,7 +70,6 @@ int main(int argc, char *argv[])
 	free(image_matrix);
 	free(final_matrix);
 
-	fclose(in_f);
 	//fclose(out_f);
 
 	return 0;
@@ -115,7 +117,7 @@ void gpuComputing(double gauss_matrix[][5], int** image_matrix, int** final_matr
 	cudaMemcpy2D((void*)d_gauss, pitch, (void*)gauss_matrix, 5*sizeof(double), 5*sizeof(double), 5, cudaMemcpyHostToDevice);
 	cudaMemcpy2D((void*)d_image, pitch2, (void*)image_matrix, width*sizeof(int), width*sizeof(int), height, cudaMemcpyHostToDevice);
 
-	kernel<<<1, 512>>>(d_image, d_final, d_gauss, pitch2, pitch3, pitch, height, width);
+	kernel<<<1, 1>>>(d_image, d_final, d_gauss, pitch2, pitch3, pitch, height, width);
 
 	cudaMemcpy2D((void*)*final_matrix, width*sizeof(int), (void*)d_final, pitch3, width*sizeof(int), height, cudaMemcpyDeviceToHost);
 
