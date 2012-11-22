@@ -14,17 +14,18 @@ __global__ void kernel(int* image, int* final, double* gauss, int pitch, int pit
 	int x, y, aux, aux2;
 	double gauss_element;
 	int image_row, image_element;
-	int tid = blockDim.x * blockIdx.x + threadIdx.x;
+	int tid = threadIdx.x;
+
 	float result;
 
 	__shared__ int fila;
 
 	fila = blockIdx.x + 2;
 
-	if (threadIdx.x < width - 4)
+	while(tid < width - 4)
 	{
 		result = 0;
-		abs_Pos = fila * width + (threadIdx.x +2);
+		abs_Pos = fila * width + (tid +2);
 		x = abs_Pos % width;
 
 		for (r = 0; r < 5; ++r) {
@@ -42,10 +43,11 @@ __global__ void kernel(int* image, int* final, double* gauss, int pitch, int pit
 		}
 		
 		int* final_row = (int*)((char*)final +  blockIdx.x * pitch_f);
-        final_row[threadIdx.x] = (int)result;
-        //printf("\nResultado %d, thread: %d, Bloque: %d\n", final_row[threadIdx.x], threadIdx.x, blockIdx.x);
-        return;
+        final_row[tid] = (int)result;
+        //printf("\nResultado %d, thread: %d, Bloque: %d\n", final_row[tid], tid, blockIdx.x);
+        tid += 512;
     }	
+    return;
 }
 
 
@@ -179,7 +181,6 @@ void gpuComputing(double gauss_matrix[][5], int** image_matrix, int** final_matr
 	
 	cudaMemcpy2D(d_gauss, pitch, *gauss_matrix, 5 * sizeof(double), 5 * sizeof(double), 5, cudaMemcpyHostToDevice);
 	cudaMemcpy2D(d_image, pitch_i, *image_matrix, (width + 4) * sizeof(int), (width + 4) * sizeof(int), (height + 4), cudaMemcpyHostToDevice);
-
 
 	kernel<<<height, 512>>>(d_image, d_final, d_gauss, pitch, pitch_i, pitch_f, (height + 4), (width + 4));
 	cudaMemcpy2D(*final_matrix, width*sizeof(int), d_final, pitch_f, width*sizeof(int), height, cudaMemcpyDeviceToHost);
