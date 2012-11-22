@@ -10,22 +10,37 @@ void gpuComputing(double gauss_matrix[][5], int** image_matrix, int** final_matr
 
 __global__ void kernel(int* image, int* final, double* gauss, int pitch, int pitch_i, int pitch_f, int height, int width)
 {
-	int i;
+	int i, j, abs_Pos, result;
+	int x, y;
 	int tid = blockDim.x * blockIdx.x + threadIdx.x;
-	
-	int posX = ((tid + 1)%(width + 4))-1;
-	int posY = (tid + 1)/(width + 4);
 
-	int initialpos = tid - (2 * height) - 2;
+	__shared__ int fila = blockIdx.x + 2;
 
-	for(i=0; i < 5; i++)
+	if (tid >= width - 4)
+		return;
+	else
 	{
-		for(i = j; j < 5; j++)
-		{
-
-		}
-	}
-
+		result = 0;
+		abs_Pos = fila * width + (threadIdx.x +2);
+		x = abs_Pos % width;
+		
+		for (int r = 0; r < 5; ++r) {
+			int aux = r - 2;
+        	float* gauss_row = (float*)((char*)gauss + r * pitch);
+        	float* image_row = (float*)((char*)image + (fila + aux) * pitch_i));
+        	
+        	for (int c = 0; c < 5; ++c)
+        	{
+        		int aux2 = c - 2;
+            	float gauss_element = gauss_row[c];
+            	float image_element = image_row[x + aux2];
+            	result += (gauss_element * image_element)/273;
+        	}
+        	float* final_row = (float*)((char*)final + fila * pitch_f);
+        	final_row[x] = result;
+        }
+        return;
+    }	
 }
 
 
@@ -147,13 +162,11 @@ void gpuComputing(double gauss_matrix[][5], int** image_matrix, int** final_matr
 	cudaMallocPitch(&d_final, &pitch_f, width * sizeof(int), height);
 
 	cudaMemcpy2D(d_gauss, pitch, gauss_matrix, 5 * sizeof(double), 5 * sizeof(double), 5, cudaMemcpyHostToDevice);
-	printf("HOLAAA\n");
 	cudaMemcpy2D(d_image, pitch_i, *image_matrix, (width + 4) * sizeof(int), (width + 4) * sizeof(int), height + 4, cudaMemcpyHostToDevice);
 
-	kernel<<<1, 1>>>(d_image, d_final, d_gauss, pitch, pitch_i, pitch_f, height, width);
+	kernel<<<1, 1>>>(d_image, d_final, d_gauss, pitch, pitch_i, pitch_f, (height + 4), (width + 4);
 
 	cudaMemcpy2D(*final_matrix, width*sizeof(int), d_final, pitch_f, width*sizeof(int), height, cudaMemcpyDeviceToHost);
-
 	cudaFree(d_final);
 	cudaFree(d_image);
 	cudaFree(d_gauss);
