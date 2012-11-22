@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 	for (i = 0; i < data_length && fscanf(in_f, "%d", &data_h[i]) == 1; ++i);
 	fclose(in_f);
 
-	
+	cudaEventRecord(start, 0);
 	/** Alloc para la memoria en GPU **/
 	cudaMalloc((void **) &data_d, data_length * sizeof(int));
 	cudaMemcpy(data_d, data_h, data_length * sizeof(int), cudaMemcpyHostToDevice);
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 	cudaGetDeviceProperties(&prop, 0);
 	blocks = prop.multiProcessorCount * 2;
 	
-	cudaEventRecord(start, 0);
+	
 	
 	histogram_kernel<<<blocks, 256>>>(data_d, data_length, hist_d);
 	cudaMemcpy(hist_h, hist_d, 256 * sizeof(int), cudaMemcpyDeviceToHost);
