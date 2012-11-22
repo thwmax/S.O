@@ -6,13 +6,28 @@
 #define PI 3.1415
 
 void gauss (double sigma, double gauss_matrix[][5]);
-void gpuComputing(double gauss_matrix[][5], int* image_matrix, int* final_matrix, int height, int width);
+void gpuComputing(double gauss_matrix[][5], int** image_matrix, int** final_matrix, int height, int width);
 
-__global__ void kernel(int* image, int* final, double* gauss, int pitch, int height, int width)
+__global__ void kernel(int* image, int* final, double* gauss, int pitch, int pitch_i, int pitch_f, int height, int width)
 {
-	final[0] = 9;
-	return;
+	int i;
+	int tid = blockDim.x * blockIdx.x + threadIdx.x;
+	
+	int posX = ((tid + 1)%(width + 4))-1;
+	int posY = (tid + 1)/(width + 4);
+
+	int initialpos = tid - (2 * height) - 2;
+
+	for(i=0; i < 5; i++)
+	{
+		for(i = j; j < 5; j++)
+		{
+
+		}
+	}
+
 }
+
 
 int main(int argc, char *argv[])
 {
@@ -118,7 +133,7 @@ void gauss(double sigma, double gauss_matrix[][5])
 }
 
 
-void gpuComputing(double gauss_matrix[][5], int* image_matrix, int* final_matrix, int height, int width)
+void gpuComputing(double gauss_matrix[][5], int** image_matrix, int** final_matrix, int height, int width)
 {
 	int *d_image, *d_final;
 	double *d_gauss;
@@ -127,16 +142,17 @@ void gpuComputing(double gauss_matrix[][5], int* image_matrix, int* final_matrix
 
 	size_t pitch, pitch_i, pitch_f;
 
-	cudaMallocPitch((void** )&d_gauss, &pitch, 5 * sizeof(double), 5);
-	cudaMallocPitch((void** )&d_image, &pitch2, width*sizeof(int), height);
-	cudaMallocPitch((void** )&d_final, &pitch3, width*sizeof(int), height);
+	cudaMallocPitch(&d_gauss, &pitch, 5 * sizeof(double), 5);
+	cudaMallocPitch(&d_image, &pitch_i, (width + 4) * sizeof(int), height + 4);
+	cudaMallocPitch(&d_final, &pitch_f, width * sizeof(int), height);
 
-	cudaMemcpy2D((void*)d_gauss, pitch, (void*)gauss_matrix, 5*sizeof(double), 5*sizeof(double), 5, cudaMemcpyHostToDevice);
-	cudaMemcpy2D((void*)d_image, pitch2, (void*)image_matrix, width*sizeof(int), width*sizeof(int), height, cudaMemcpyHostToDevice);
+	cudaMemcpy2D(d_gauss, pitch, gauss_matrix, 5 * sizeof(double), 5 * sizeof(double), 5, cudaMemcpyHostToDevice);
+	printf("HOLAAA\n");
+	cudaMemcpy2D(d_image, pitch_i, *image_matrix, (width + 4) * sizeof(int), (width + 4) * sizeof(int), height + 4, cudaMemcpyHostToDevice);
 
-	kernel<<<1, 1>>>(d_image, d_final, d_gauss, pitch2, pitch3, pitch, height, width);
+	kernel<<<1, 1>>>(d_image, d_final, d_gauss, pitch, pitch_i, pitch_f, height, width);
 
-	cudaMemcpy2D((void*)*final_matrix, width*sizeof(int), (void*)d_final, pitch3, width*sizeof(int), height, cudaMemcpyDeviceToHost);
+	cudaMemcpy2D(*final_matrix, width*sizeof(int), d_final, pitch_f, width*sizeof(int), height, cudaMemcpyDeviceToHost);
 
 	cudaFree(d_final);
 	cudaFree(d_image);
