@@ -10,10 +10,10 @@ void gpuComputing(int gauss_matrix[][5], int** image_matrix, int** final_matrix,
 
 __global__ void kernel(int* image, int* final, int* gauss, int pitch, int pitch_i, int pitch_f, int height, int width)
 {
-	int i, j, abs_Pos, c, r;
-	int x, y, aux, aux2;
+	int abs_Pos, c, r;
+	int x, aux, aux2;
 	int gauss_element;
-	int image_row, image_element;
+	int image_element;
 	int tid = threadIdx.x;
 
 	float result;
@@ -56,10 +56,9 @@ int main(int argc, char *argv[])
 	int width, height, i, j;
 	int **image_matrix, **final_matrix, **auxiliar_matrix;
 	int gauss_matrix[5][5];
-	int sigma;
+	int sigma = (int)strtod(argv[2], NULL);
 	int *temp, *temp2, *temp3;
 
-	sigma = = (int)strtod(argv[2], NULL)
 	/** Lectura del archivo contenedor de los datos **/
 	FILE *in_f = fopen(argv[1], "r");
 	
@@ -133,8 +132,11 @@ int main(int argc, char *argv[])
         {
 			if ( j != width - 1)
 				fprintf(out, "%d\t", final_matrix[i][j]);
-			else
+			else if (i != height-1)
 				fprintf(out, "%d\n", final_matrix[i][j]);
+			else
+				fprintf(out, "%d", final_matrix[i][j]);
+
         }
 	}
 	fclose(out);
@@ -162,17 +164,13 @@ void gauss(int sigma, int gauss_matrix[][5])
 			v = pow(y,2);
 			varianza = pow(sigma,2);
 
-			operation = exp((-u-v)/(2.0*varianza))/(2.0*PI*varianza)
+			operation = 273.0*exp((-u-v)/(2.0*varianza))/(2.0*PI*varianza);
 			gauss_matrix[i][j] = (int)ceil(operation);
 			x++;
 		}
 		y--;
 		x = -2;
 	}
-
-	for(i = 0; i < 5; i++)
-		for(j = 0; j < 5; j++)
-			gauss_matrix[i][j] = gauss_matrix[i][j]*273.0;
 	return;
 }
 
@@ -180,7 +178,6 @@ void gauss(int sigma, int gauss_matrix[][5])
 void gpuComputing(int gauss_matrix[][5], int** image_matrix, int** final_matrix, int height, int width)
 {
 	int *d_image, *d_final, *d_gauss;
-	int dimension = height * width;
 	int r_height = height + 4;
 	int r_width = width + 4;
 
