@@ -15,7 +15,6 @@ __global__ void kernel(int* image, int* final, int* gauss, int pitch, int pitch_
 	int gauss_element;
 	int image_element;
 	int tid = threadIdx.x;
-	int index = 
 
 	float result;
 
